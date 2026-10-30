@@ -3,12 +3,16 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+const base = "/deutsch-gym/";
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: "prompt",
+      scope: base,
       includeAssets: ["icons/*.png"],
       manifest: {
         name: "Deutsch Gym",
@@ -19,23 +23,24 @@ export default defineConfig({
         theme_color: "#142b40",
         background_color: "#f7f4ec",
         display: "standalone",
-        start_url: "/",
-        scope: "/",
+        id: base,
+        start_url: base,
+        scope: base,
         icons: [
           {
-            src: "/icons/icon-192.png",
+            src: `${base}icons/icon-192.png`,
             sizes: "192x192",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "/icons/icon-512.png",
+            src: `${base}icons/icon-512.png`,
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "/icons/maskable-512.png",
+            src: `${base}icons/maskable-512.png`,
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
@@ -44,7 +49,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,png,svg,woff2}"],
-        navigateFallback: "/index.html",
+        navigateFallback: `${base}index.html`,
+        navigateFallbackAllowlist: [/^\/deutsch-gym\//],
         cleanupOutdatedCaches: true,
       },
     }),
