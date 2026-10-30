@@ -1,6 +1,6 @@
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { AppRouter } from "./components/AppRouter";
 import { registerSW } from "virtual:pwa-register";
 import { App } from "./App";
 import { initializeDatabase } from "./lib/db";
@@ -36,11 +36,11 @@ async function start() {
   }
   root.render(
     <StrictMode>
-      <BrowserRouter>
+      <AppRouter>
         <ThemeProvider>
           <App />
         </ThemeProvider>
-      </BrowserRouter>
+      </AppRouter>
     </StrictMode>,
   );
   const updateSW = registerSW({

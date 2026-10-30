@@ -33,4 +33,25 @@ describe("database v1", () => {
     expect((await database.preferences.get("theme"))?.value).toBe("dark");
     expect(await database.sessions.count()).toBe(1);
   });
+  it("retains every learning store when a new app instance opens the same database", async () => {
+    await initializeDatabase(database);
+    const item = { id: "item-1", title: "Test expression", createdAt: 1 };
+    const session = { id: "session-1", completedAt: 2, durationSeconds: 30 };
+    const review = { id: "review-1", learningItemId: item.id, dueAt: 3 };
+    await database.learningItems.add(item);
+    await database.sessions.add(session);
+    await database.reviews.add(review);
+    await database.preferences.put({ key: "theme", value: "dark" });
+    database.close();
+    const nextApp = new DeutschGymDB(database.name);
+    try {
+      await initializeDatabase(nextApp);
+      expect(await nextApp.learningItems.toArray()).toEqual([item]);
+      expect(await nextApp.sessions.toArray()).toEqual([session]);
+      expect(await nextApp.reviews.toArray()).toEqual([review]);
+      expect((await nextApp.preferences.get("theme"))?.value).toBe("dark");
+    } finally {
+      nextApp.close();
+    }
+  });
 });
