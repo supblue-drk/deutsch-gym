@@ -4,10 +4,10 @@ const database = new DeutschGymDB("deutsch-gym-test");
 afterEach(async () => {
   await database.delete();
 });
-describe("database v1", () => {
+describe("database v2", () => {
   it("initializes all stores without fabricating learning data", async () => {
     await initializeDatabase(database);
-    expect(database.verno).toBe(1);
+    expect(database.verno).toBe(2);
     expect(await database.preferences.get("theme")).toEqual({
       key: "theme",
       value: "system",
@@ -54,4 +54,37 @@ describe("database v1", () => {
       nextApp.close();
     }
   });
+});
+
+it("upgrades a real v1 database additively without clearing any legacy records", async () => {
+  const { default: Dexie } = await import("dexie");
+  const legacy = new Dexie(database.name);
+  legacy.version(1).stores({
+    preferences: "&key",
+    learningItems: "&id, createdAt",
+    sessions: "&id, completedAt",
+    reviews: "&id, learningItemId, dueAt",
+  });
+  await legacy.open();
+  await legacy.table("preferences").put({ key: "theme", value: "dark" });
+  await legacy
+    .table("learningItems")
+    .put({ id: "old", title: "Existing", createdAt: 1 });
+  await legacy
+    .table("sessions")
+    .put({ id: "old-session", completedAt: 2, durationSeconds: 60 });
+  await legacy
+    .table("reviews")
+    .put({ id: "old-review", learningItemId: "old", dueAt: 3 });
+  legacy.close();
+  await initializeDatabase(database);
+  expect(database.verno).toBe(2);
+  expect((await database.preferences.get("theme"))?.value).toBe("dark");
+  expect((await database.preferences.get("dailyGoal"))?.value).toBe("3");
+  expect(await database.learningItems.count()).toBe(1);
+  expect(await database.sessions.count()).toBe(1);
+  expect(await database.reviews.count()).toBe(1);
+  expect(await database.cards.count()).toBe(0);
+  expect(await database.learningSessions.count()).toBe(0);
+  expect(await database.learningEvents.count()).toBe(0);
 });

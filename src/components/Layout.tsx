@@ -16,7 +16,14 @@ const tabs = [
 export function Layout() {
   return (
     <div className="app-shell">
-      <a className="skip-link" href="#main">
+      <a
+        className="skip-link"
+        href="#main"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      >
         Zum Inhalt
       </a>
       <header className="topbar">

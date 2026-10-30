@@ -39,3 +39,14 @@ assert.ok(
 console.log(
   "GitHub Pages artifact checks passed: HTML, icons, manifest, SW URL/scope/fallback.",
 );
+
+const content = JSON.parse(readFileSync("src/data/expressions.json", "utf8"));
+for (const item of content) {
+  assert.ok(
+    bundles.includes(item.id) && bundles.includes(item.german),
+    `Missing offline expression: ${item.id}`,
+  );
+}
+console.log(
+  `Offline library verified: ${content.length} expressions bundled in precached JavaScript.`,
+);

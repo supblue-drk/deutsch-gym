@@ -3,15 +3,16 @@ import {
   BriefcaseBusiness,
   MessageCircle,
   CarFront,
-  Layers,
-  ChartNoAxesColumnIncreasing,
-  BookOpen,
   ChevronRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { ButtonLink, Card, EmptyState, PageHeading } from "../components/ui";
+import { ButtonLink, Card, PageHeading } from "../components/ui";
 import { useTheme } from "../lib/theme";
+import { DataSettings } from "../components/DataSettings";
+import { useLearningData } from "../lib/useLearningData";
+import { progressMetrics } from "../lib/progress";
+import { StatusMessage } from "../components/learning-ui";
 import type { Theme } from "../lib/db";
 const tracks = [
   {
@@ -22,18 +23,22 @@ const tracks = [
   },
   {
     icon: MessageCircle,
-    title: "Natürlich ausdrücken",
+    title: "Natürlich im Alltag",
     text: "Nuancen, Redewendungen & präzise Sprache",
     tag: "EXPRESSION",
   },
   {
     icon: CarFront,
-    title: "Strategisch mitreden",
+    title: "Automotive & Strategy",
     text: "Automobil, Produkt & Marktpositionierung",
     tag: "AUTOMOTIVE",
   },
 ];
 export function Today() {
+  const { data, error, now } = useLearningData();
+  const metrics = data ? progressMetrics(data, now) : null;
+  const goal =
+    data?.preferences.find((pref) => pref.key === "dailyGoal")?.value ?? "3";
   return (
     <>
       <PageHeading
@@ -43,17 +48,22 @@ export function Today() {
         Dein Raum für souveränes Deutsch. Im Beruf und darüber hinaus.
       </PageHeading>
       <Card className="hero">
-        <span className="pill">B2 — C1 · PHASE 1</span>
+        <span className="pill">B2 — C1 · DEIN TÄGLICHES TRAINING</span>
         <div className="hero-decoration" aria-hidden="true">
           Aa<span>↗</span>
         </div>
         <h2>Sprache wird Stärke.</h2>
         <p>Ein klarer Gedanke. Der richtige Ausdruck. Dein nächster Schritt.</p>
-        <ButtonLink to="/gym">
-          Das Gym entdecken <ArrowUpRight size={18} />
+        <ButtonLink to="/train">
+          Tagestraining öffnen <ArrowUpRight size={18} />
         </ButtonLink>
-        <p className="hero-note">Dein Studio steht. Die Trainings folgen.</p>
+        <p className="hero-note">
+          {metrics
+            ? `${metrics.dueNow} jetzt fällig · Tagesziel: ${goal} neue Ausdrücke`
+            : "Dein Training ist auch offline verfügbar."}
+        </p>
       </Card>
+      <StatusMessage error={error} />
       <div className="section-label">
         <h2>Deine Trainingswelten</h2>
         <span>03 BEREICHE</span>
@@ -76,78 +86,8 @@ export function Today() {
     </>
   );
 }
-export function Gym() {
-  return (
-    <>
-      <PageHeading eyebrow="TRAININGSSTUDIO" title="Dein nächstes Sprachlevel.">
-        Drei Perspektiven. Ein Ziel: Deutsch, das im echten Leben trägt.
-      </PageHeading>
-      <div className="space-y-4">
-        {tracks.map(({ icon: Icon, title, text, tag }) => (
-          <Card key={title}>
-            <div className="flex items-center justify-between">
-              <div className="icon-tile">
-                <Icon />
-              </div>
-              <span className="eyebrow">{tag}</span>
-            </div>
-            <h2 className="mt-5">{title}</h2>
-            <p className="muted mt-2">{text}</p>
-            <span className="status-label">
-              Training folgt in einer späteren Phase
-            </span>
-          </Card>
-        ))}
-      </div>
-    </>
-  );
-}
-export function Review() {
-  return (
-    <>
-      <PageHeading eyebrow="WIEDERHOLEN & FESTIGEN" title="Was bleibt, zählt.">
-        Hier werden später deine fälligen Wiederholungen gesammelt.
-      </PageHeading>
-      <EmptyState icon={<Layers />} title="Noch keine Wiederholungen">
-        Sobald du mit dem Training beginnst, entsteht hier deine persönliche
-        Wiederholungsliste.
-      </EmptyState>
-    </>
-  );
-}
-export function Progress() {
-  return (
-    <>
-      <PageHeading
-        eyebrow="DEINE ENTWICKLUNG"
-        title="Fortschritt braucht Zeit."
-      >
-        Dein Lernen wird sichtbar — sobald du loslegst.
-      </PageHeading>
-      <EmptyState
-        icon={<ChartNoAxesColumnIncreasing />}
-        title="Deine Geschichte beginnt bald"
-      >
-        Es gibt noch keine abgeschlossenen Trainings. Hier erscheinen später
-        ausschließlich deine tatsächlichen Lerndaten.
-      </EmptyState>
-    </>
-  );
-}
-export function Library() {
-  return (
-    <>
-      <PageHeading eyebrow="DEINE BIBLIOTHEK" title="Gute Worte. Griffbereit.">
-        Ein zukünftiger Ort für nützliche Ausdrücke und persönliche
-        Sprachbausteine.
-      </PageHeading>
-      <EmptyState icon={<BookOpen />} title="Noch keine Einträge">
-        Die Bibliothek ist vorbereitet. Lerninhalte und das Speichern eigener
-        Ausdrücke folgen später.
-      </EmptyState>
-    </>
-  );
-}
+export { Gym, Review, Progress } from "./LearningPages";
+export { Library } from "./Library";
 export function Settings() {
   const { theme, setTheme } = useTheme();
   const [error, setError] = useState("");
@@ -190,6 +130,7 @@ export function Settings() {
         </fieldset>
         {error && <p role="alert">{error}</p>}
       </Card>
+      <DataSettings />
       <Card className="mt-4">
         <h2>Auf deinem iPhone</h2>
         <p className="muted mt-2">
@@ -202,7 +143,7 @@ export function Settings() {
           von Website-Daten entfernt sie.
         </p>
       </Card>
-      <p className="footnote">Deutsch Gym · Version 0.1.0 · Phase 1</p>
+      <p className="footnote">Deutsch Gym · Version 0.2.0 · Offline lernen</p>
     </>
   );
 }
